@@ -1,3 +1,5 @@
+// Tout en haut, on définit l'URL de ton serveur Render (Remplace bien par ton URL exacte si ce n'est pas celle-là)
+const API_URL = "https://api-bancaire-nodejs.onrender.com";
 const log = (data) => {
     document.getElementById('consoleResultat').innerText = JSON.stringify(data, null, 2);
 };
@@ -7,7 +9,8 @@ async function creerCompte() {
     const nomClient = document.getElementById('creerNom').value;
     const solde = document.getElementById('creerSolde').value;
     
-    const res = await fetch('/api/comptes/creer', {
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes/creer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nomClient, solde })
@@ -19,7 +22,8 @@ async function creerCompte() {
 // 2. Connexion
 async function connexionCompte() {
     const numeroCompte = document.getElementById('connexionNumero').value;
-    const res = await fetch('/api/comptes/connexion', {
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes/connexion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numeroCompte })
@@ -34,7 +38,8 @@ async function faireTransaction() {
     const montant = document.getElementById('transacMontant').value;
     const type = document.getElementById('transacType').value;
 
-    const res = await fetch('/api/comptes/transaction', {
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes/transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numero, montant, type })
@@ -49,7 +54,8 @@ async function faireTransfert() {
     const numeroDestination = document.getElementById('transfDest').value;
     const montant = document.getElementById('transfMontant').value;
 
-    const res = await fetch('/api/comptes/transfert', {
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes/transfert`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numeroSource, numeroDestination, montant })
@@ -63,14 +69,16 @@ async function supprimerCompte() {
     const id = document.getElementById('supprId').value;
     if(!confirm("Êtes-vous sûr de vouloir supprimer définitivement ce compte ?")) return;
 
-    const res = await fetch(`/api/comptes/${id}/supprimer`, { method: 'DELETE' });
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes/${id}/supprimer`, { method: 'DELETE' });
     const data = await res.json();
     log(data);
 }
 
 // 6. Charger tous les comptes
 async function chargerTousLesComptes() {
-    const res = await fetch('/api/comptes');
+    // On ajoute API_URL devant le chemin
+    const res = await fetch(`${API_URL}/api/comptes`);
     const data = await res.json();
     log(data);
 }
