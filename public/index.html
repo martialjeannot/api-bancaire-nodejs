@@ -1,0 +1,587 @@
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Banking Dashboard - ICT_304</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <style>
+        body { max-width: 900px; margin: 20px auto; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .admin { border-color: #ff4d4d; }
+    </style>
+</head>
+<body>
+    <h1>🏦 Système de Gestion Bancaire API</h1>
+    <hr>
+
+    <div class="grid">
+        <div>
+            <div class="card">
+                <h3>🆕 Créer un Compte</h3>
+                <input type="text" id="creerNom" placeholder="Nom du client">
+                <input type="number" id="creerSolde" placeholder="Solde initial">
+                <button onclick="creerCompte()">Créer le compte</button>
+            </div>
+
+            <div class="card">
+                <h3> Connexion / Vérification</h3>
+                <input type="text" id="connexionNumero" placeholder="Numéro de compte (ex: CB-1234)">
+                <button onclick="connexionCompte()">Se connecter</button>
+            </div>
+
+            <div class="card">
+                <h3>💸 Dépôt / Retrait</h3>
+                <input type="text" id="transacNumero" placeholder="Numéro de compte">
+                <input type="number" id="transacMontant" placeholder="Montant">
+                <select id="transacType">
+                    <option value="DEPOT">Dépôt</option>
+                    <option value="RETRAIT">Retrait</option>
+                </select>
+                <button onclick="faireTransaction()">Valider la transaction</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h3>🔄 Transfert d'Argent</h3>
+                <input type="text" id="transfSource" placeholder="Numéro compte source">
+                <input type="text" id="transfDest" placeholder="Numéro compte destination">
+                <input type="number" id="transfMontant" placeholder="Montant">
+                <button onclick="faireTransfert()">Exécuter le transfert</button>
+            </div>
+
+            <div class="card admin">
+                <h3>⚙️ Zone Admin : Suppression</h3>
+                <input type="number" id="supprId" placeholder="ID unique du compte (ex: 1)">
+                <button style="background-color: #ff4d4d;" onclick="supprimerCompte()">Supprimer définitivement</button>
+            </div>
+
+            <div class="card" style="background-color: #1a1a1a; color: #00ff00;">
+                <h3>🖥️ Console d'affichage (Résultats de l'API)</h3>
+                <pre id="consoleResultat">> En attente d'actions...</pre>
+                <button onclick="chargerTousLesComptes()">Rafraîchir la liste globale</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Banking Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --border: #e5e7eb;
+            --input-bg: #f9fafb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        /* Grille principale */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        /* Style des cartes */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            color: #1e293b;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .card.admin-delete {
+            border: 1px solid #fca5a5;
+            background-color: #fef2f2;
+        }
+
+        /* Formulaires */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #475569;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #ffffff;
+        }
+
+        /* Boutons */
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-success { background-color: var(--success); color: white; }
+        
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+
+        /* Console d'affichage */
+        .console-card {
+            background-color: #0f172a;
+            color: #38bdf8;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .console-card h2 {
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+        }
+
+        .console-output {
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Tableau Admin */
+        .admin-table-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .btn-refresh {
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>E-Banking Dashboard</h1>
+        <p style="color: #64748b; margin: 0;">Gestion globale de l'API Bancaire</p>
+    </header>
+
+    <div class="grid">
+        
+        <div class="card">
+            <h2>Créer un Compte</h2>
+            <div class="form-group">
+                <label>Nom complet du client</label>
+                <input type="text" id="create-nom" placeholder="Ex: Pierre Dev">
+            </div>
+            <div class="form-group">
+                <label>Adresse Email</label>
+                <input type="email" id="create-email" placeholder="Ex: pierre@example.com">
+            </div>
+            <div class="form-group">
+                <label>Numéro de Téléphone</label>
+                <input type="tel" id="create-tel" placeholder="Ex: +237 6xx xxx xxx">
+            </div>
+            <div class="form-group">
+                <label>Solde Initial (FCFA / €)</label>
+                <input type="number" id="create-solde" placeholder="Ex: 50000">
+            </div>
+            <button class="btn-primary" onclick="creerCompte()">Créer le compte</button>
+        </div>
+
+        <div class="card">
+            <h2>Connexion / Vérification</h2>
+            <div class="form-group">
+                <label>Numéro de Compte</label>
+                <input type="text" id="login-numero" placeholder="Ex: CB-4926">
+            </div>
+            <button class="btn-primary" onclick="connecterCompte()">Se connecter</button>
+        </div>
+
+        <div class="card">
+            <h2>Dépôt / Retrait</h2>
+            <div class="form-group">
+                <label>Numéro de Compte</label>
+                <input type="text" id="trans-numero" placeholder="Ex: CB-7996">
+            </div>
+            <div class="form-group">
+                <label>Montant</label>
+                <input type="number" id="trans-montant" placeholder="Ex: 10000">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-success" onclick="effectuerTransaction('DEPOT')">Dépôt</button>
+                <button class="btn-danger" onclick="effectuerTransaction('RETRAIT')">Retrait</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Transfert d'Argent</h2>
+            <div class="form-group">
+                <label>Compte Émetteur (Débit)</label>
+                <input type="text" id="source-numero" placeholder="Ex: CB-7996">
+            </div>
+            <div class="form-group">
+                <label>Compte Bénéficiaire (Crédit)</label>
+                <input type="text" id="dest-numero" placeholder="Ex: CB-4926">
+            </div>
+            <div class="form-group">
+                <label>Montant du virement</label>
+                <input type="number" id="transfert-montant" placeholder="Ex: 10000">
+            </div>
+            <button class="btn-primary" onclick="executerTransfert()">Exécuter le transfert</button>
+        </div>
+
+        <div class="card admin-delete">
+            <h2 style="color: var(--danger);">Zone Admin : Suppression</h2>
+            <div class="form-group">
+                <label>ID du compte à supprimer</label>
+                <input type="text" id="delete-id" placeholder="Ex: 2">
+            </div>
+            <button class="btn-danger" onclick="supprimerCompte()">Supprimer définitivement</button>
+        </div>
+    </div>
+
+    <div class="console-card">
+        <h2>Console d'affichage (Résultats de l'API)</h2>
+        <div class="console-output" id="console-log">> En attente d'une action...</div>
+    </div>
+
+    <div class="admin-table-section">
+        <div class="table-header">
+            <h2>Espace Admin : Liste des Utilisateurs</h2>
+            <button class="btn-primary btn-refresh" onclick="chargerUtilisateurs()">Rafraîchir la liste</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Numéro de Compte</th>
+                        <th>Nom du Client</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Solde</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #64748b;">Cliquez sur "Rafraîchir la liste" pour charger les données.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- <script>
+    // Conserve tes fonctions JavaScript existantes ici (creerCompte, effectuerTransaction, etc.)
+    // Ne change rien à ta logique existante pour l'instant !
+    
+    function logConsole(message) {
+        document.getElementById('console-log').innerText = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+    }
+</script> -->
+
+
+<script>
+    // URL de base de ton API Express
+    const API_URL = '/api/comptes';
+
+    // Fonction utilitaire pour afficher les réponses dans la console de l'écran
+    function logConsole(message) {
+        const output = document.getElementById('console-log');
+        if (typeof message === 'object') {
+            output.innerText = JSON.stringify(message, null, 2);
+        } else {
+            output.innerText = `> ${message}`;
+        }
+    }
+
+    // 1. CRÉER UN COMPTE (Prend en compte le Nom, Email, Téléphone et Solde)
+    async function creerCompte() {
+        const nomClient = document.getElementById('create-nom').value;
+        const email = document.getElementById('create-email').value;
+        const telephone = document.getElementById('create-tel').value;
+        const solde = parseFloat(document.getElementById('create-solde').value) || 0;
+
+        if (!nomClient) return alert("Le nom du client est obligatoire !");
+
+        try {
+            const response = await fetch(`${API_URL}/creer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nomClient, email, telephone, solde })
+            });
+            const data = await response.json();
+            logConsole(data);
+            
+            // Rafraîchit automatiquement le tableau admin après une création
+            chargerUtilisateurs();
+        } catch (error) {
+            logConsole({ error: error.message });
+        }
+    }
+
+    // 2. CONNEXION / VÉRIFICATION D'UN COMPTE SEUL
+    async function connecterCompte() {
+        const numero = document.getElementById('login-numero').value;
+        if (!numero) return alert("Veuillez saisir un numéro de compte !");
+
+        try {
+            // Utilise la route de connexion existante de ton API
+            const response = await fetch(`${API_URL}/connexion`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ numeroCompte: numero })
+            });
+            
+            if (!response.ok) {
+                const textErr = await response.text();
+                throw new Error(textErr);
+            }
+            
+            const data = await response.json();
+            logConsole(data);
+        } catch (error) {
+            logConsole({ error: error.message });
+        }
+    }
+
+    // 3. EFFECTUER UN DÉPÔT OU UN RETRAIT
+    async function effectuerTransaction(type) {
+        const numero = document.getElementById('trans-numero').value;
+        const montant = parseFloat(document.getElementById('trans-montant').value);
+
+        if (!numero || !montant) return alert("Veuillez remplir le numéro de compte et le montant !");
+
+        try {
+            const response = await fetch(`${API_URL}/transaction`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ numero, montant, type })
+            });
+            const text = await response.text();
+            logConsole(text);
+            
+            // Met à jour le tableau admin pour voir l'évolution des soldes
+            chargerUtilisateurs();
+        } catch (error) {
+            logConsole({ error: error.message });
+        }
+    }
+
+    // 4. EXÉCUTER UN TRANSFERT (Virement de compte à compte)
+    async function executerTransfert() {
+        const sourceNumero = document.getElementById('source-numero').value;
+        const destNumero = document.getElementById('dest-numero').value;
+        const montant = parseFloat(document.getElementById('transfert-montant').value);
+
+        if (!sourceNumero || !destNumero || !montant) {
+            return alert("Veuillez remplir tous les champs du transfert !");
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/transfert`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sourceNumero, destNumero, montant })
+            });
+            const text = await response.text();
+            logConsole(text);
+            
+            chargerUtilisateurs();
+        } catch (error) {
+            logConsole({ error: error.message });
+        }
+    }
+
+    // 5. SUPPRIMER UN COMPTE DEFINITIVEMENT (Zone Admin)
+    async function supprimerCompte() {
+        const id = document.getElementById('delete-id').value;
+        if (!id) return alert("Veuillez saisir l'ID du compte à supprimer !");
+
+        if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement le compte ID ${id} ?`)) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${id}/supprimer`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            logConsole(data);
+            
+            // Rafraîchit le tableau pour constater la disparition du compte
+            chargerUtilisateurs();
+        } catch (error) {
+            logConsole({ error: error.message });
+        }
+    }
+
+    // 6. NOUVEAU : CHARGER LA LISTE DES UTILISATEURS DANS LE TABLEAU ADMIN
+    async function chargerUtilisateurs() {
+        const tbody = document.getElementById('users-table-body');
+        
+        try {
+            const response = await fetch(API_URL); // Appelle GET /api/comptes
+            const comptes = await response.json();
+            
+            // On vide le tableau avant de le remplir
+            tbody.innerHTML = '';
+            
+            if (comptes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #64748b;">Aucun compte enregistré dans la base.</td></tr>`;
+                return;
+            }
+
+            // On boucle sur chaque compte retourné par Sequelize
+            comptes.forEach(compte => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${compte.id}</strong></td>
+                    <td><span style="background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-family: monospace;">${compte.numeroCompte}</span></td>
+                    <td>${compte.nomClient}</td>
+                    <td>${compte.email || '<em style="color:#94a3b8;">Non renseigné</em>'}</td>
+                    <td>${compte.telephone || '<em style="color:#94a3b8;">Non renseigné</em>'}</td>
+                    <td><strong>${compte.solde.toLocaleString()} FCFA</strong></td>
+                    <td>
+                        <span style="padding: 4px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; ${compte.actif ? 'background:#d1fae5; color:#065f46;' : 'background:#fee2e2; color:#991b1b;'}">
+                            ${compte.actif ? 'Actif' : 'Bloqué'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger);">Erreur lors du chargement : ${error.message}</td></tr>`;
+        }
+    }
+
+    // Chargement automatique de la liste au démarrage de la page
+    window.onload = chargerUtilisateurs;
+</script>
+
+
+</body>
+</html>
+
+
+
